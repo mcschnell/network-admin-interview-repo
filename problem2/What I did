@@ -1,1 +1,2 @@
-Added printer4 to the zone file
+Added  'printer4.testroot.local.        IN A    10.4.7.19' to db.testroot.local zone file
+Incremented the serial number of the zone by 1
