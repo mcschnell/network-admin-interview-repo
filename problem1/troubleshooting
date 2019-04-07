@@ -1,0 +1,68 @@
+
+Logged into client PC using SSH key provided
+
+Commands: {
+   ifconfig -a
+   nslookup
+      server
+}
+
+Shows 2 DNS servers (10.0.0.235 and 10.0.0.89)
+Can't ping either DNS server
+
+Commands: {
+   nslookup
+   server 10.0.0.235
+   www.google.com
+   (returns correct result)
+   server 10.0.0.89
+   www.google.com
+   (fails with REFUSED)
+}
+ 
+Problem is that only 1 of the 2 DNS servers are responding to queries
+Looks like 10.0.0.89 is either not a DNS server at all, or it is down
+
+Commands: {
+   cat /var/lib/dhclient/dhclient--eth0.lease
+}
+
+DHCP lease shows that both DNS servers were provided by the DHCP server
+I am assuming that 10.0.0.89 is meant to be a DNS server so need to investigate why it will not provide DNS responses
+
+SSH to either DNS server fails
+Investigation shows ssh keys are not correct
+Loaded the provided key to my ssh directory
+
+Commands: {
+   cd /home/ec2-user/.ssh
+   vim testKey
+      (paste key from netadm-candidate-20190404-cschnell.pem)
+	   :wq
+	   chmod 600 testKey
+	   ssh ec2-user@10.0.0.89 -i testKey
+}
+
+Have never used an Amazon Linux server so I had to dig a bit to figure out the file structures.
+
+Commands: {
+   find / -name named.conf
+   cd /var/lib/docker/overlay2/173f90e0ed3478ffc8a823af04b7a482c8c1581408810eaaa8144d89fc0f8f0f/merged/etc/bind
+}
+
+Comparing the named.conf file between .89 and .235, the .89 file is different 
+(Missing the ACL statements for RFC1918 addresses as well as having recursion disabled)
+
+Commands: {
+   (Make a backup and move the named.conf file on .89)
+   mv named.conf named.conf.bak
+   vim named.conf
+   (paste in text from the named.conf file from .235)
+   :wq
+}
+
+Rebooted server to force changes to take effect
+(could not figure out how to just restart the bind process only)
+
+Resolution:
+10.0.0.89 had a misconfigured named.conf file. Replaced it with the working file from .235/github and name resolution started working
