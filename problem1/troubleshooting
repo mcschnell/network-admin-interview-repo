@@ -1,5 +1,5 @@
 
-Logged into client PC using SSH key provided
+Logged into client machine using SSH key provided
 
 Commands: {
    ifconfig -a
