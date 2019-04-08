@@ -1,1 +1,50 @@
+Disclaimer: 
+I have never used a Zyxel device before so I am not certain if there is anything else I would need to do to make the changes take effect.
 
+
+Added the following to the Zyxel config:
+
+interface vlan5
+ port lag1
+ vlan-id 5
+ ip address 10.0.5.1 255.255.255.0
+ upstream 1048576
+ downstream 1048576
+ mtu 1500
+ type internal
+ ip rip send version 2
+ ip rip receive version 2
+ ip ospf priority 1
+ ip ospf cost 10
+ ip dhcp-pool Network_Pool_VLAN5
+
+
+ip dhcp pool Network_Pool_VLAN5
+ network 10.0.5.0 255.255.255.0
+ default-router 10.0.5.1
+ starting-address 10.0.5.100 pool-size 100
+ first-dns-server 10.0.0.10
+ second-dns-server 10.0.0.11
+ third-dns-server 10.0.0.12
+ lease 1 0 0
+ dhcp-option 42 NTP_Server ip 10.0.0.15 10.0.0.16 10.0.0.17
+ 
+ ----------
+ 
+As for the last requirement for only allowing vlan 5 to be able to access the internet, there are 2 ways that I see that this could be done, depending on if you want vlan 5 to have the same security policies as the other vlans or if you want vlan 5 to be specifically locked down and not able to talk to any other VLANs
+
+1) Add interface vlan5 to the LAN zone, which will cause vlan 5 to inherit the same policies as other configured vlans 
+zone LAN
+ interface vlan5
+
+2) Create a new zone with just vlan5 in it and create new policy to only allow access to the WAN zone
+zone LAN2
+ interface vlan5
+
+secure-policy 5
+ from LAN2
+ to WAN
+ log
+ name VLAN5_to_WAN
+ action allow
+ activate
