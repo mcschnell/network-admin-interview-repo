@@ -2,7 +2,7 @@ Disclaimer:
 I have never used a Zyxel device before so I am not certain if there is anything else I would need to do to make the changes take effect.
 
 
-Added the following to the Zyxel config:
+Add the following to the Zyxel config:
 
 interface vlan5
  port lag1
